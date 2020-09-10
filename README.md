@@ -1,11 +1,11 @@
  PDK-sink-node-drvier
  ==========================================================
 
-### This document describes the source code for the 'toIot' iot platform sink node, which is almost used in raspberry Pi  
+ This document describes the source code for the 'toIot' iot platform sink node, which is almost used in raspberry Pi  
 
-### This codes runs on a Raspbrerry Pi and communicates with Arduino via mqtt protocol. In this code, Raspberry Pi plays the role of mqtt subscriber and broker , and also plays the role of kafka producer. When various sensor values are received from Arduino and transmitted , the Raspberry Pi, which operates this code, organizes the values with timestamp and sends them to kafka. 
+ This codes runs on a Raspbrerry Pi and communicates with Arduino via mqtt protocol. In this code, Raspberry Pi plays the role of mqtt subscriber and broker , and also plays the role of kafka producer. When various sensor values are received from Arduino and transmitted , the Raspberry Pi, which operates this code, organizes the values with timestamp and sends them to kafka. 
 
-### Raspberry Pi is a sink node that not only communicates with toIot's web server. Raspberry Pi has a seperate web server to communicate by handling requests from toiot's web server    
+ Raspberry Pi is a sink node that not only communicates with toIot's web server. Raspberry Pi has a seperate web server to communicate by handling requests from toiot's web server    
 
 ## Result 
 ![download](https://user-images.githubusercontent.com/60679342/92687305-3d65e580-f376-11ea-9979-8c457d9bf5b7.gif)
