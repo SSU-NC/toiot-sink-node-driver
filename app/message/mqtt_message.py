@@ -22,11 +22,11 @@ class mqtt_messages:
     def kafka_message(self,v_topic,payload) :
         kafka_msg ={}
         kafka_msg['nid'] = v_topic[1]
-        payload = payload.split(',')
-        kafka_msg['values']= map(float, payload)
+        payload = payload.decode().split(',')
+        kafka_msg['values']= payload
         kafka_msg['timestamp'] = str(datetime.datetime.now())[0:19]
-        _str = json.dumps(kafka_msg).encode('utf-8')
-        return _str 
+        temp = json.dumps(kafka_msg).encode('utf-8')
+        return temp 
         
     def set_vos(self,number) :
         self.vos = number
@@ -52,6 +52,7 @@ class mqtt_messages:
              'n_uuid' : self.nodes[i],
              'state' : False
             }
+            print(type(temp))
             self.ping_message['state'].append(temp)
            
 

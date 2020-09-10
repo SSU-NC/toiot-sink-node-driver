@@ -8,7 +8,8 @@ import datetime ,os,json ,ast ,copy , time
 from  message.mqtt_message import mqtt_messages
 from  .http_codes import http_response_code
 from bluetooth.bluetooth_message import bluetooth_messages 
-import threading,argparse 
+import threading
+from .setup import args 
 from bluetooth import * 
 
 def on_connect(client, userdata, flags, rc):
@@ -29,7 +30,6 @@ def send_message_to_kafka(msg,type):
         v_topic = msg.topic.split('/')
         kafka_message= topic_manager.kafka_message(v_topic,msg.payload)
         topic_manager.add_ping_state(v_topic[1])             
-        print(kafka_message)
         producer.send("sensors",key=v_topic[2].encode(),value= kafka_message)
         
     if type == 'data/bluetooth':
@@ -82,11 +82,6 @@ def loop_bluetooth():
 #start the raspiwebserver and create objects (Kafka producer,Healthcheck,Mqtt,Bluetooth)
             
 app = Flask(__name__)
-parser = argparse.ArgumentParser(description='PDK-sink-node-driver opitons')
-parser.add_argument('--w',required=True,help='the raspi webserver')
-parser.add_argument('--k',required=True,help='kafka')
-parser.add_argument('--b',required=True,help='mqtt broker ip')
-args= parser.parse_args()
 producer = KafkaProducer(bootstrap_servers=args.k,api_version=(0,10,2,0))
 topic_manager= mqtt_messages()
 client= mqtt.Client()
