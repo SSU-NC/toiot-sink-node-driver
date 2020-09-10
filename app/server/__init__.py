@@ -5,10 +5,12 @@ from  .healthcheck import Healthcheck
 from kafka import KafkaProducer
 from kafka.errors import KafkaError , NoBrokersAvailable
 import datetime ,os,json ,ast ,copy , time
-from  .mqtt_message import mqtt_messages
+from  message.mqtt_message import mqtt_messages
 from  .http_codes import http_response_code
-from .bluetooth_message import bluetooth_messages 
-import threading 
+from bluetooth.bluetooth_message import bluetooth_messages 
+import threading
+from .setup import args 
+#from bluetooth import * 
 
 def on_connect(client, userdata, flags, rc):
     print("connected to mqtt broker")
@@ -28,7 +30,6 @@ def send_message_to_kafka(msg,type):
         v_topic = msg.topic.split('/')
         kafka_message= topic_manager.kafka_message(v_topic,msg.payload)
         topic_manager.add_ping_state(v_topic[1])             
-        print(kafka_message)
         producer.send("sensors",key=v_topic[2].encode(),value= kafka_message)
         
     if type == 'data/bluetooth':
@@ -58,7 +59,7 @@ def response_healthcheck():
         topic_manager.ping_message['timestamp'] = str(datetime.datetime.now())[0:19]
         send_message_to_kafka(json.dumps(topic_manager.ping_message).encode('utf-8'),'ping')
         time.sleep(healthcheck.get_time())
-        
+'''        
 #receive data from bluetooth connection        
 def loop_bluetooth():
     for i in range(len(blt.targets)):
@@ -75,13 +76,13 @@ def loop_bluetooth():
             print('disconnected')
             sock.close()
             print('all done')
-    
+'''    
      
         
 #start the raspiwebserver and create objects (Kafka producer,Healthcheck,Mqtt,Bluetooth)
             
 app = Flask(__name__)
-producer = KafkaProducer(bootstrap_servers=os.environ.get('KAFKA_SERVER_IP'),api_version=(0,10,2,0))
+producer = KafkaProducer(bootstrap_servers=args.k,api_version=(0,10,2,0))
 topic_manager= mqtt_messages()
 client= mqtt.Client()
 #blt=bluetooth_messages()
@@ -93,6 +94,7 @@ def data_callback(client,userdata,msg) :
     return send_message_to_kafka(msg,"data/mqtt")
 
 # start bluetooth connection with the nodes 
+'''
 @app.route('/bluetooth')
 def bluetooth_run() :
     i=0
@@ -107,7 +109,7 @@ def bluetooth_run() :
     threading.Thread(target=response_healthcheck).start()
     threading.Thread(target= loop_bluetooth).start()
     return http_response_code['success200']
-    
+'''    
 #connecting mqtt client to mqtt broker        
 @app.route('/mqtt')
 def mqtt_run () :  
@@ -116,7 +118,7 @@ def mqtt_run () :
     client.on_message = on_message
     client.on_disconnect= on_disconnect
     client.message_callback_add("data/#",data_callback)    
-    client.connect(os.environ.get('MQTT_BROKER_IP'))
+    client.connect(args.b)
     client.loop_start()
     return http_response_code['success200']    
           
