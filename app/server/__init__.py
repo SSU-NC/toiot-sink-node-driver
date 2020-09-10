@@ -10,7 +10,7 @@ from  .http_codes import http_response_code
 from bluetooth.bluetooth_message import bluetooth_messages 
 import threading
 from .setup import args 
-from bluetooth import * 
+#from bluetooth import * 
 
 def on_connect(client, userdata, flags, rc):
     print("connected to mqtt broker")
@@ -59,7 +59,7 @@ def response_healthcheck():
         topic_manager.ping_message['timestamp'] = str(datetime.datetime.now())[0:19]
         send_message_to_kafka(json.dumps(topic_manager.ping_message).encode('utf-8'),'ping')
         time.sleep(healthcheck.get_time())
-        
+'''        
 #receive data from bluetooth connection        
 def loop_bluetooth():
     for i in range(len(blt.targets)):
@@ -76,7 +76,7 @@ def loop_bluetooth():
             print('disconnected')
             sock.close()
             print('all done')
-    
+'''    
      
         
 #start the raspiwebserver and create objects (Kafka producer,Healthcheck,Mqtt,Bluetooth)
@@ -85,7 +85,7 @@ app = Flask(__name__)
 producer = KafkaProducer(bootstrap_servers=args.k,api_version=(0,10,2,0))
 topic_manager= mqtt_messages()
 client= mqtt.Client()
-blt=bluetooth_messages()
+#blt=bluetooth_messages()
 app.debug= True
 healthcheck = Healthcheck()
 
@@ -94,6 +94,7 @@ def data_callback(client,userdata,msg) :
     return send_message_to_kafka(msg,"data/mqtt")
 
 # start bluetooth connection with the nodes 
+'''
 @app.route('/bluetooth')
 def bluetooth_run() :
     i=0
@@ -108,7 +109,7 @@ def bluetooth_run() :
     threading.Thread(target=response_healthcheck).start()
     threading.Thread(target= loop_bluetooth).start()
     return http_response_code['success200']
-    
+'''    
 #connecting mqtt client to mqtt broker        
 @app.route('/mqtt')
 def mqtt_run () :  
