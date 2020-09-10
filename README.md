@@ -46,7 +46,7 @@ The default port is 1883, but you could change the port by modifiying mosquitto.
 Then start the sink-node web server :
 There are three variables you should fill in 
  ```
-  $ cd toiot-sink-node-driver
+  $ cd toiot-sink-node-driver/app
   $ python3 run.py --b='MQTT_BROKER_IP' --k='KAFKA_BROKER_IP' --w='SINK_NODE_WEBSERVER_IP'
   ```
 
