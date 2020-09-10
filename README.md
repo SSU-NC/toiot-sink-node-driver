@@ -10,11 +10,11 @@ This document describes the source code for the `toIot` iot platform sink node, 
   $ git clone https://github.com/SSU-NC/toiot-sink-node-driver
   $ cd toiot-sink-node-driver
   ```
-2. Install the dependencies:  
+2. Install the dependencies
   ```
   $ pip3 install -r requirements.txt
   ```
-3. install [eclipse-mosquitto](https://mosquitto.org/download/)
+3. install [eclipse-mosquitto](https://mosquitto.org/download/). In this project, we used version 1.6.12.
 
 ### Run 
 ```
