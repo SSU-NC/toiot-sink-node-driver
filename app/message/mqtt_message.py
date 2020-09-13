@@ -10,7 +10,8 @@ Other topics can be additionally managed
 '''
 
 
-class mqtt_messages:
+class MqttMessages:
+    sensors = []
     nodes = []
     ping_receive = []
     mqtt_topic = []
@@ -19,12 +20,13 @@ class mqtt_messages:
     vos = 0
     delete_topic = []
 
+    def __init__(self):
+        self.ping_message_format = []
+
     def kafka_message(self, v_topic, payload):
-        kafka_msg = {}
-        kafka_msg['nid'] = v_topic[1]
-        payload = payload.decode().split(',')
-        kafka_msg['values'] = payload
-        kafka_msg['timestamp'] = str(datetime.datetime.now())[0:19]
+        payload[1:] = list(map(float, payload[1:]))
+        kafka_msg = {'nid': v_topic[1], 'sid': payload[0], 'values': payload[1:],
+                     'timestamp': str(datetime.datetime.now())[0:19]}
         temp = json.dumps(kafka_msg).encode('utf-8')
         return temp
 
@@ -33,14 +35,22 @@ class mqtt_messages:
 
     def get_message_format(self, format):
         self.clear_topics()
-        topics = format[0]
-        topics = topics['topics']
-        for i in range(len(topics)):
-            topic = "data/" + topics[i]['node_uuid'] + "/" + topics[i]['sensor_uuid']
-            if topics[i]['node_uuid'] not in self.nodes:
-                self.nodes.append(topics[i]['node_uuid'])
-                self.ping_receive.append(("ping/" + topics[i]['node_uuid']))
+        temp = format['nodes']
+        self.sensors = temp
+        for i in range(len(temp)):
+            temp[i]['id'] = str(temp[i]['id'])
+            topic = "data/" + temp[i]['id']
+            self.nodes.append(temp[i]['id'])
+            self.ping_receive.append(("ping/" + temp[i]['id']))
             self.add_mqtt_topic(topic, self.vos)
+
+    def sensor_check(self, nodeid, payload):
+        for i in range(len(self.sensors)):
+            if self.sensors[i]['id'] == nodeid:
+                for j in range(len(self.sensors[i]['sensors'])):
+                    if str(self.sensors[i]['sensors'][j]['id']) == payload[0]:
+                        return True
+        return False
 
     def get_ping_format(self):
         self.ping_message['timestamp'] = 0
@@ -54,7 +64,7 @@ class mqtt_messages:
 
     def add_ping_state(self, topic):
         for i in range(len(self.ping_message['state'])):
-            if (topic == self.ping_message['state'][i]['n_uuid']):
+            if topic == self.ping_message['state'][i]['n_uuid']:
                 self.ping_message['state'][i]['state'] = True
 
     def add_mqtt_topic(self, topic, vos):
@@ -66,7 +76,7 @@ class mqtt_messages:
         self.delete_topic = []
         for i in range(len(self.topics)):
             v_topic = self.topics[i].split('/')
-            if (v_topic[1] == nodeid):
+            if v_topic[1] is nodeid:
                 self.nodes.remove(nodeid)
                 self.delete_topic.append(self.topics[i])
                 print(self.delete_topic)
@@ -75,14 +85,14 @@ class mqtt_messages:
     def get_delete_sensor(self, sensorid):
         for i in range(len(self.topics)):
             v_topic = self.topics[i].split('/')
-            if (v_topic[2] == sensorid):
+            if v_topic[2] == sensorid:
                 delete_topic = self.topics[i]
                 return delete_topic
-        return sensor
+        return 1
 
     def clear_topics(self):
         self.mqtt_topic = []
         self.topics = []
         self.nodes = []
         self.ping_receive = []
-        self.ping_message_format = []
+        self.sensors = []

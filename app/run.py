@@ -1,4 +1,4 @@
-from server import app,args
+from server import app, args
 import os
 
-app.run(host=args.w) 
+app.run(host=args.w)

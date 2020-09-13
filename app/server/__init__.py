@@ -7,14 +7,12 @@ import paho.mqtt.client as mqtt
 from flask import Flask
 from flask import request
 from kafka import KafkaProducer
-from message.mqtt_message import mqtt_messages
+from message.mqtt_message import MqttMessages
 
-from .healthcheck import Healthcheck
+from .healthcheck import HealthCheck
 from .http_codes import http_response_code
 from .setup import args
 
-
-# from bluetooth import *
 
 def on_connect(client, userdata, flags, rc):
     print("connected to mqtt broker")
@@ -30,13 +28,15 @@ def on_message(client, userdata, message):
 
 # give message to kafka as kafka producer
 def send_message_to_kafka(msg):
-    print("data by mqtt: sending message to kafka : %s" % msg)
     v_topic = msg.topic.split('/')
-    kafka_message = topic_manager.kafka_message(v_topic, msg.payload)
-    if healthcheck.get_healthcheck_mode():
-        topic_manager.add_ping_state(v_topic[1])
-    print(kafka_message)
-    producer.send("sensors", key=v_topic[2].encode(), value=kafka_message)
+    payload = msg.payload.decode().split(',')
+    kafka_message = topic_manager.kafka_message(v_topic, payload)
+    if topic_manager.sensor_check(v_topic[1], payload):
+        if health_check.get_health_check_mode():
+            topic_manager.add_ping_state(v_topic[1])
+        print("data by mqtt: sending message to kafka : %s" % msg)
+        print(kafka_message)
+        producer.send("sensors", kafka_message)
 
 
 # callbacks
@@ -60,28 +60,28 @@ def on_disconnect(client, user_data, rc):
     client.disconnect()
 
 
-# start the raspiwebserver and create objects (Kafka producer,Healthcheck,Mqtt,Bluetooth)
+# start the node webserver
 
 app = Flask(__name__)
 producer = KafkaProducer(bootstrap_servers=args.k, api_version=(0, 10, 2, 0))
-topic_manager = mqtt_messages()
+topic_manager = MqttMessages()
 client = mqtt.Client()
 app.debug = True
-healthcheck = Healthcheck()
+health_check = HealthCheck()
 mqtt_run()
 
 
 # check the state of the nodes
-@app.route('/healthcheck')
-def response_healthcheck():
+@app.route('/health-check')
+def response_health_check():
     # making the ping message format by the topics
     topic_manager.get_ping_format()
-    healthcheck.set_healthcheck_mode(True)
-    time.sleep(healthcheck.get_time())
+    health_check.set_health_check_mode(True)
+    time.sleep(health_check.get_time())
     topic_manager.ping_message['timestamp'] = str(datetime.datetime.now())[0:19]
-    healthcheck.set_healthcheck_mode(False)
+    health_check.set_health_check_mode(False)
     print(topic_manager.ping_message)
-    return topic_manager.ping_message
+    return json.dumps(topic_manager.ping_message).encode('utf-8')
 
 
 # connecting mqtt client to mqtt broker
@@ -95,26 +95,25 @@ def mqtt_run():
     return http_response_code['success200']
 
 
-# setting interval of the healthcheck time
-@app.route('/health_check/set_time/<time>', methods=['GET'])
-def healthcheck_set_time():
-    healthcheck.set_time(time)
+# setting interval of the health check time
+@app.route('/health-check/set_time/<time>', methods=['GET'])
+def health_check_set_time():
+    health_check.set_time(time)
     return http_response_code['success200']
 
 
-# interval of the healthcheck time
-@app.route('/health_check/get_time', methods=['GET'])
-def healtcheck_get_time():
-    healthcheck.get_time()
+# interval of the health check time
+@app.route('/health-check/time', methods=['GET'])
+def health_check_get_time():
+    health_check.get_time()
     return http_response_code['success200']
 
 
 # make the format of the topics from the data which toiot server gave
-@app.route('/new_topics', methods=['POST'])
+@app.route('/topics', methods=['POST'])
 def response_getMessageFormat():
     topic_manager.clear_topics()
-    temp = json.loads(request.get_data(), encoding='utf-8')
-    temp = ast.literal_eval(json.dumps(temp))
+    temp = json.loads(request.get_data().decode())
     topic_manager.get_message_format(temp)
     client.subscribe(topic_manager.mqtt_topic)
     print(topic_manager.mqtt_topic)
@@ -122,7 +121,7 @@ def response_getMessageFormat():
 
 
 # delete sensor            
-@app.route('/sensor/<sensor>', methods=['GET', 'DELETE'])
+@app.route('/sensors/<sensor>', methods=['GET', 'DELETE'])
 def delete_sensor(sensor):
     client.unsubscribe(topic_manager.get_delete_sensor(sensor))
     return http_response_code['success200']
