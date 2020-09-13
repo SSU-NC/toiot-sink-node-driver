@@ -2,7 +2,6 @@ Flask==1.0.2
 Jinja2==2.10
 kafka-python==2.0.1
 paho-mqtt==1.5.0
-pyinotify==0.9.6
 PyJWT==1.7.0
 requests==2.21.0
 requests-oauthlib==1.0.0
