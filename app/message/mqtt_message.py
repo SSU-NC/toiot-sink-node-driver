@@ -88,7 +88,7 @@ class MqttMessages:
             if v_topic[2] == sensorid:
                 delete_topic = self.topics[i]
                 return delete_topic
-        return 1
+        return v_topic
 
     def clear_topics(self):
         self.mqtt_topic = []
