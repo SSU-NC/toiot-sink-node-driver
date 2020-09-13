@@ -25,7 +25,7 @@ class MqttMessages:
 
     def kafka_message(self, v_topic, payload):
         payload[1:] = list(map(float, payload[1:]))
-        kafka_msg = {'nid': v_topic[1], 'sid': payload[0], 'values': payload[1:],
+        kafka_msg = {'nid': int(v_topic[1]), 'sid': int(payload[0]), 'values': payload[1:],
                      'timestamp': str(datetime.datetime.now())[0:19]}
         temp = json.dumps(kafka_msg).encode('utf-8')
         return temp
@@ -40,7 +40,7 @@ class MqttMessages:
         for i in range(len(temp)):
             temp[i]['id'] = str(temp[i]['id'])
             topic = "data/" + temp[i]['id']
-            self.nodes.append(temp[i]['id'])
+            self.nodes.append(int(temp[i]['id']))
             self.ping_receive.append(("ping/" + temp[i]['id']))
             self.add_mqtt_topic(topic, self.vos)
 
@@ -64,7 +64,7 @@ class MqttMessages:
 
     def add_ping_state(self, topic):
         for i in range(len(self.ping_message['state'])):
-            if topic == self.ping_message['state'][i]['n_uuid']:
+            if int(topic) == self.ping_message['state'][i]['n_uuid']:
                 self.ping_message['state'][i]['state'] = True
 
     def add_mqtt_topic(self, topic, vos):
