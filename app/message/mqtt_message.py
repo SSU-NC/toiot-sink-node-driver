@@ -25,7 +25,7 @@ class MqttMessages:
 
     def kafka_message(self, v_topic, payload):
         payload[1:] = list(map(float, payload[1:]))
-        kafka_msg = {'nid': int(v_topic[1]), 'sid': int(payload[0]), 'values': payload[1:],
+        kafka_msg = {'node_id': int(v_topic[1]), 'sensor_id': int(payload[0]), 'values': payload[1:],
                      'timestamp': str(datetime.datetime.now())[0:19]}
         temp = json.dumps(kafka_msg).encode('utf-8')
         return temp
