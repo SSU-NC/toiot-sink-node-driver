@@ -36,7 +36,7 @@ def send_message_to_kafka(msg):
             topic_manager.add_ping_state(v_topic[1])
         print("data by mqtt: sending message to kafka : %s" % msg)
         print(kafka_message)
-        producer.send("sensors", kafka_message)
+        producer.send("sensor-data", kafka_message)
 
 
 # callbacks
