@@ -84,17 +84,6 @@ def response_health_check():
     return json.dumps(topic_manager.ping_message).encode('utf-8')
 
 
-# connecting mqtt client to mqtt broker
-def mqtt_run():
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.on_disconnect = on_disconnect
-    client.message_callback_add("data/#", data_callback)
-    client.connect(args.b)
-    client.loop_start()
-    return http_response_code['success200']
-
-
 # setting interval of the health check time
 @app.route('/health-check/set_time/<time>', methods=['GET'])
 def health_check_set_time():
