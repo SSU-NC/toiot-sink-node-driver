@@ -33,8 +33,8 @@ class HealthCheck:
             self.target_nodelist[nodeid] = False
 
     def set_node_state(self, nodeid, state):
-        if nodeid in self.nodestates:
-            self.nodestates[nodeid] = state
+        if int(nodeid) in self.target_nodelist:
+            self.target_nodelist[int(nodeid)] = state
             return True #success
         else:
             return False #error
@@ -45,7 +45,7 @@ class HealthCheck:
         json_msg['sid'] = dev_info.get_id()
     
         for nodeid in self.target_nodelist: #nodeid is key
-            state_list += [{'nid':nodeid, 'state':target_nodelist[nodeid]}]
+            state_list += [{'nid':nodeid, 'state':self.target_nodelist[nodeid]}]
         json_msg['state'] = state_list
         
         return json.dumps(json_msg).encode('UTF-8')
