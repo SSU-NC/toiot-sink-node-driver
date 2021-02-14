@@ -2,6 +2,8 @@ import ast
 import datetime
 import json
 import time
+import threading
+import socket
 
 import paho.mqtt.client as mqtt
 from flask import Flask
@@ -33,7 +35,10 @@ def send_message_to_kafka(msg):
     kafka_message = topic_manager.kafka_message(v_topic, payload)
     if topic_manager.sensor_check(v_topic[1], payload):
         if health_check.get_health_check_mode():
-            topic_manager.add_ping_state(v_topic[1])
+            if(health_check.set_health_check_mode(v_topic[1], True)):
+                print("health check: ", v_topic[1], "->True")
+            else:
+                print("This node is not healthcheck target: ",v_topic[1])
         print("data by mqtt: sending message to kafka : %s" % msg)
         print(kafka_message)
         producer.send("sensor-data", kafka_message)
@@ -59,6 +64,14 @@ def on_disconnect(client, user_data, rc):
     print("Disconnected")
     client.disconnect()
 
+def health_check_handler(client_socket):
+    while(1):
+        if health_check.get_health_check_mode():
+            health_check.setup_target_nodelist(topic_manager.get_nodes())
+            #time.sleep(health_check.get_time())
+            time.sleep(5) #short sleep time for test
+            print("health_check: Send Json to HealthCheck Server...")
+            client_socket.sendall(health_check.create_msg())
 
 # start the node webserver
 
@@ -69,19 +82,14 @@ client = mqtt.Client()
 app.debug = True
 health_check = HealthCheck()
 mqtt_run()
-
-
-# check the state of the nodes
-@app.route('/health-check')
-def response_health_check():
-    # making the ping message format by the topics
-    topic_manager.get_ping_format()
-    health_check.set_health_check_mode(True)
-    time.sleep(health_check.get_time())
-    topic_manager.ping_message['timestamp'] = str(datetime.datetime.now())[0:19]
-    health_check.set_health_check_mode(False)
-    print(topic_manager.ping_message)
-    return json.dumps(topic_manager.ping_message).encode('utf-8')
+# create socket and run health_check thread
+health_check.set_health_check_mode(True)
+healthcheck_server = '172.30.1.10'
+healthcheck_port = 50000
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_socket.connect((healthcheck_server, healthcheck_port))
+th = threading.Thread(target=health_check_handler, args=(client_socket, ))
+th.start()
 
 
 # setting interval of the health check time
