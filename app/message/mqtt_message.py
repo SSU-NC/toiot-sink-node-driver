@@ -35,6 +35,8 @@ class MqttMessages:
     
     def get_nodes(self):
         return self.nodes
+    def add_node(self, nodeid):
+        self.nodes.append(nodeid)
 
     def get_message_format(self, format):
         self.clear_topics()
@@ -48,10 +50,10 @@ class MqttMessages:
             self.add_mqtt_topic(topic, self.vos)
 
     def sensor_check(self, nodeid, payload):
-        for i in range(len(self.sensors)):
-            if self.sensors[i]['id'] == nodeid:
-                for j in range(len(self.sensors[i]['sensors'])):
-                    if str(self.sensors[i]['sensors'][j]['id']) == payload[0]:
+        for sensor in self.sensors:
+            if sensor['id'] == nodeid:
+                for sensorid in sensor['sensors']:
+                    if str(sensorid['id']) == payload[0]:
                         return True
         return False
     '''
