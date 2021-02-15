@@ -33,6 +33,8 @@ def send_message_to_kafka(msg):
     v_topic = msg.topic.split('/')
     payload = msg.payload.decode().split(',')
     kafka_message = topic_manager.kafka_message(v_topic, payload)
+    topic_manager.add_node(v_topic[1])
+    topic_manager.add_sensor(v_topic[1], payload[0])
     #if topic_manager.sensor_check(v_topic[1], payload):
     if len(topic_manager.get_nodes()) > 0:
         print("Debuging")
@@ -82,14 +84,14 @@ def health_check_handler(client_socket):
 app = Flask(__name__)
 producer = KafkaProducer(bootstrap_servers=args.k, api_version=(0, 10, 2, 0))
 topic_manager = MqttMessages()
-topic_manager.add_node(1)
+#topic_manager.add_node(1)
 client = mqtt.Client()
 app.debug = True
 health_check = HealthCheck()
 mqtt_run()
 # create socket and run health_check thread
 health_check.set_health_check_mode(True)
-healthcheck_server = '172.30.1.25'
+healthcheck_server = '10.5.110.40'
 healthcheck_port = 8083
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((healthcheck_server, healthcheck_port))
@@ -123,7 +125,7 @@ def response_getMessageFormat():
 
 
 # delete sensor            
-@app.route('/sensors/<sensor>', methods=['GET', 'DELETE'])
+@app.route('/delete_sensor/<node>/<sensor>', methods=['GET', 'DELETE'])
 def delete_sensor(sensor):
     client.unsubscribe(topic_manager.get_delete_sensor(sensor))
     return http_response_code['success200']

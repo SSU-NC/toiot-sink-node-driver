@@ -36,7 +36,18 @@ class MqttMessages:
     def get_nodes(self):
         return self.nodes
     def add_node(self, nodeid):
-        self.nodes.append(nodeid)
+        if nodeid not in self.nodes:
+            self.nodes.append(nodeid)
+            return True
+        else:
+            return False
+    def add_sensor(self, nodeid, sensorid):
+        for sensor in self.sensors:
+            if sensor['id'] == nodeid:
+                sensor['sensors']['id'] = sensorid
+                return True
+            else:
+                return False
 
     def get_message_format(self, format):
         self.clear_topics()
@@ -56,22 +67,7 @@ class MqttMessages:
                     if str(sensorid['id']) == payload[0]:
                         return True
         return False
-    '''
-    def get_ping_format(self):
-        self.ping_message['timestamp'] = 0
-        self.ping_message['state'] = []
-        for i in range(len(self.nodes)):
-            temp = {
-                'n_uuid': self.nodes[i],
-                'state': False
-            }
-            self.ping_message['state'].append(temp)
 
-    def add_ping_state(self, topic):
-        for elem in self.ping_message['state']:
-            if int(topic) == elem['n_uuid']:
-                elem['state'] = True
-    '''
     def add_mqtt_topic(self, topic, vos):
         self.topics.append(topic)
         topic = (topic, vos)

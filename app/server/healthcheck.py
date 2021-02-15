@@ -48,5 +48,5 @@ class HealthCheck:
             state_list += [{'nid':nodeid, 'state':self.target_nodelist[nodeid]}]
         json_msg['state'] = state_list
         
-        return json.dumps(json_msg).encode('UTF-8')
+        return bytes(json.dumps(json_msg), encoding = 'UTF-8')
 
