@@ -39,6 +39,11 @@ class HealthCheck:
         else:
             return False #error
 
+    def send_req(self, client):
+        for nodeid in self.target_nodelist:
+            print("Send DevStatusReq to node",nodeid,"...")
+            client.publish('command/downlink/DevStatusReq/'+str(nodeid), 'sid:'+str(dev_info.get_id()))
+
     def create_msg(self):
         json_msg = dict()
         state_list = list()
@@ -48,5 +53,6 @@ class HealthCheck:
             state_list += [{'nid':nodeid, 'state':self.target_nodelist[nodeid]}]
         json_msg['state'] = state_list
         
+        print(json_msg)
         return bytes(json.dumps(json_msg), encoding = 'UTF-8')
 
