@@ -30,11 +30,11 @@ class HealthCheck:
     def setup_target_nodelist(self, nodelist):
         self.target_nodelist = dict()
         for nodeid in nodelist:
-            self.target_nodelist[nodeid] = False
+            self.target_nodelist[nodeid] = {'state':False, 'battery':255}
 
-    def set_node_state(self, nodeid, state):
+    def set_node_state(self, nodeid, state, battery):
         if int(nodeid) in self.target_nodelist:
-            self.target_nodelist[int(nodeid)] = state
+            self.target_nodelist[int(nodeid)] = {'state':state, 'battery':battery}
             return True #success
         else:
             return False #error
@@ -42,7 +42,7 @@ class HealthCheck:
     def send_req(self, client):
         for nodeid in self.target_nodelist:
             print("Send DevStatusReq to node",nodeid,"...")
-            client.publish('command/downlink/DevStatusReq/'+str(nodeid), 'sid:'+str(dev_info.get_id()))
+            client.publish('command/downlink/DevStatusReq/'+str(nodeid), 'sid:'+str(dev_info.get_id()), qos=2)
 
     def create_msg(self):
         json_msg = dict()
@@ -50,7 +50,7 @@ class HealthCheck:
         json_msg['sid'] = dev_info.get_id()
     
         for nodeid in self.target_nodelist: #nodeid is key
-            state_list += [{'nid':nodeid, 'state':self.target_nodelist[nodeid]}]
+            state_list += [{'nid':nodeid, 'state':self.target_nodelist[nodeid]['state'], 'battery':self.target_nodelist[nodeid]['battery']}]
         json_msg['state'] = state_list
         
         print(json_msg)

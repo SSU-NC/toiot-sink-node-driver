@@ -54,7 +54,8 @@ def handle_uplink_command(msg):
     v_topic = msg.topic.split('/') #command / uplink / MacCommand / nodeid
     if v_topic[2] == 'DevStatusAns':
         print('Received DevStatusAns!')
-        health_check.set_node_state(v_topic[3], True)
+        json_msg = json.loads(str(msg.payload.decode()))
+        health_check.set_node_state(v_topic[3], True, json_msg['battery'])
 
 # callbacks
 def data_callback(client, userdata, msg):
@@ -66,7 +67,7 @@ def command_callback(client, userdata, msg):
 # connecting mqtt client to mqtt broker
 def mqtt_run():
     client.on_connect = on_connect
-    client.on_message = on_message
+    #client.on_message = on_message
     client.on_disconnect = on_disconnect
     client.message_callback_add("data/#", data_callback)
     client.message_callback_add("command/uplink/#", command_callback)
@@ -94,19 +95,22 @@ def health_check_handler(client_socket):
 # start the node webserver
 
 app = Flask(__name__)
-producer = KafkaProducer(bootstrap_servers=[args.k+':9092'], value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+producer = KafkaProducer(bootstrap_servers=[args.k+':9092'], api_version=(0,10,2,0), value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 topic_manager = MqttMessages()
 client = mqtt.Client()
-app.debug = True
+app.debug = False
+#app.threaded = True
 health_check = HealthCheck()
 actuator = Actuator()
 mqtt_run()
 # create socket and run health_check thread
 health_check.set_health_check_mode(True)
-healthcheck_server = '10.5.110.26' #'220.70.2.5'
+healthcheck_server = '10.5.110.37' #'220.70.2.5'
 healthcheck_port = 8085
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+print('Connect to HealthCheck Server...')
 client_socket.connect((healthcheck_server, healthcheck_port))
+print("Connected to HealthCheck...")
 th = threading.Thread(target=health_check_handler, args=(client_socket, ))
 th.start()
 
@@ -150,10 +154,10 @@ def delete_node(node):
     return http_response_code['success200']
 
 # handle actuator
-@app.route('/actuator/<node>/<actuator>/<value>', methods=['POST'])
+@app.route('/actuator', methods=['GET', 'POST'])
 def actuator_command():
-    actuator.create_msg
-    client.publish('actuator/'+str(node), )
+    json_data = request.json
+    actuator.send_req(client, json_data)
     return http_response_code['success200']
 
 # error handlers
