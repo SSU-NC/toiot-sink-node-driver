@@ -82,9 +82,16 @@ def on_disconnect(client, user_data, rc):
     print("Disconnected")
     client.disconnect()
 
-def health_check_handler(client_socket):
+def health_check_handler():
     while(1):
         if health_check.get_health_check_mode():
+            healthcheck_server = '10.5.110.11' #'220.70.2.5'
+            healthcheck_port = 8085
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print('Connect to HealthCheck Server...')
+            client_socket.connect((healthcheck_server, healthcheck_port))
+            print("Connected to HealthCheck...")
+
             print("healthcheck target: ", topic_manager.get_nodes())
             health_check.setup_target_nodelist(topic_manager.get_nodes())
             health_check.send_req(client)
@@ -105,13 +112,7 @@ actuator = Actuator()
 mqtt_run()
 # create socket and run health_check thread
 health_check.set_health_check_mode(True)
-healthcheck_server = '10.5.110.37' #'220.70.2.5'
-healthcheck_port = 8085
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print('Connect to HealthCheck Server...')
-client_socket.connect((healthcheck_server, healthcheck_port))
-print("Connected to HealthCheck...")
-th = threading.Thread(target=health_check_handler, args=(client_socket, ))
+th = threading.Thread(target=health_check_handler, args=())
 th.start()
 
 
@@ -156,7 +157,7 @@ def delete_node(node):
 # handle actuator
 @app.route('/actuator', methods=['GET', 'POST'])
 def actuator_command():
-    json_data = request.json
+    json_data = request.get_json(silent=True)
     actuator.send_req(client, json_data)
     return http_response_code['success200']
 
